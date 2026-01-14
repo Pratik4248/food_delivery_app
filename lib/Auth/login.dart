@@ -74,74 +74,93 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Image.asset(
-                "assets/login.png",
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height * 0.35,
-                fit: BoxFit.contain,
-              ),
-
-              const SizedBox(height: 20),
-
-              // Email
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Email",
-                  prefixIcon: Icon(Icons.email),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Password
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscure,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  hintText: "Password",
-                  prefixIcon: const Icon(Icons.key),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscure ? Icons.remove_red_eye : Icons.visibility_off,
-                    ),
-                    onPressed: () => setState(() => _obscure = !_obscure),
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 24),
+                  Image.asset(
+                    "assets/login.png",
+                    width: double.infinity,
+                    height: MediaQuery.of(context).size.height * 0.32,
+                    fit: BoxFit.contain,
                   ),
-                ),
+                  const SizedBox(height: 16),
+
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text('Welcome back', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          Text('Sign in to continue', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                          const SizedBox(height: 16),
+
+                          // Email
+                          TextField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              hintText: 'Email',
+                              prefixIcon: const Icon(Icons.email_outlined),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Password
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: _obscure,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              hintText: 'Password',
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              suffixIcon: IconButton(
+                                icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                                onPressed: () => setState(() => _obscure = !_obscure),
+                              ),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          ElevatedButton(
+                            onPressed: _isLoading ? null : _signIn,
+                            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                            child: _isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const SignupScreen()));
+                            },
+                            style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
+                            child: const Text('Don\'t have an account? Sign up'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                ],
               ),
-
-              const SizedBox(height: 20),
-
-              ElevatedButton(
-                onPressed: _isLoading ? null : _signIn,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Sign In'),
-              ),
-
-              const SizedBox(height: 8),
-
-              TextButton(
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SignupScreen()));
-                },
-                child: const Text('Don\'t have an account? Sign up'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

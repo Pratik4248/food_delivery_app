@@ -20,6 +20,7 @@ class _SignupScreenState extends State<SignupScreen> {
   // Verification stage state
   bool _awaitingVerification = false;
   bool _verificationEmailSent = false;
+  bool _signupComplete = false;
   String? _signedUpEmail;
   bool _isSendingVerification = false;
 
@@ -53,11 +54,15 @@ class _SignupScreenState extends State<SignupScreen> {
       setState(() {
         _awaitingVerification = true;
         _signedUpEmail = email;
+        _signupComplete = true; // hide the input fields and show confirmation
       });
+
+      // Try to ensure a verification/confirmation email is sent
+      await _sendVerificationEmail();
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sign-up successful. Verify your email to activate your account.')),
+        const SnackBar(content: Text('Sign-up successful. A confirmation email was sent to your address.')),
       );
     } catch (e) {
       if (mounted) {
@@ -118,94 +123,138 @@ class _SignupScreenState extends State<SignupScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Image.asset(
-                "assets/signup.png",
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height * 0.35,
-                fit: BoxFit.contain,
-              ),
-
-              const SizedBox(height: 20),
-
-              // Email
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Email",
-                  prefixIcon: Icon(Icons.email),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Password
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscure,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  hintText: "Password",
-                  prefixIcon: const Icon(Icons.key),
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscure ? Icons.remove_red_eye : Icons.visibility_off),
-                    onPressed: () => setState(() => _obscure = !_obscure),
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 24),
+                  Image.asset(
+                    "assets/signup.png",
+                    width: double.infinity,
+                    height: MediaQuery.of(context).size.height * 0.32,
+                    fit: BoxFit.contain,
                   ),
-                ),
-              ),
+                  const SizedBox(height: 16),
 
-              const SizedBox(height: 20),
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text('Create account', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          Text('Sign up to get started', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black87)),
+                          const SizedBox(height: 16),
 
-              ElevatedButton(
-                onPressed: _isLoading ? null : _signUp,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Sign Up'),
-              ),
+                          // Show inputs only if signup not completed
+                          if (!_signupComplete) ...[
+                            // Email
+                            TextField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                                hintText: 'Email',
+                                prefixIcon: const Icon(Icons.email_outlined),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              ),
+                            ),
 
-              const SizedBox(height: 10),
+                            const SizedBox(height: 12),
 
-              // Verification area: appears after sign-up
-              if (_awaitingVerification) ...[
-                const Text('Your account needs to be verified.'),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: _isSendingVerification ? null : _sendVerificationEmail,
-                  child: _isSendingVerification
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Send verification email'),
-                ),
-                const SizedBox(height: 8),
-                if (_verificationEmailSent) ...[
-                  ElevatedButton(
-                    onPressed: _checkVerificationAndGoToLogin,
-                    child: const Text('I clicked the link — Verify and go to Login'),
+                            // Password
+                            TextField(
+                              controller: _passwordController,
+                              obscureText: _obscure,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                                hintText: 'Password',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                                  onPressed: () => setState(() => _obscure = !_obscure),
+                                ),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              ),
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            ElevatedButton(
+                              onPressed: _isLoading ? null : _signUp,
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : const Text('Create Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                            ),
+
+                            const SizedBox(height: 8),
+                          ] else ...[
+                            // Confirmation view after sign up
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.check_circle_outline, size: 64, color: Colors.green),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'A confirmation email has been sent to',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  _signedUpEmail ?? '',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 16),
+
+                                OutlinedButton(
+                                  onPressed: _isSendingVerification ? null : _sendVerificationEmail,
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    side: BorderSide.none,
+                                  ),
+                                  child: _isSendingVerification ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Resend confirmation email'),
+                                ),
+
+                                
+                              ],
+                            ),
+
+                            const SizedBox(height: 8),
+                          ],
+
+                          if (!_signupComplete) ...[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                              },
+                              style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
+                              child: const Text('Already have an account? Sign in'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
+
+                  const SizedBox(height: 24),
                 ],
-                const SizedBox(height: 10),
-              ],
-
-
-
-              TextButton(
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-                },
-                child: const Text('Already have an account? Sign in'),
               ),
-            ],
+            ),
           ),
         ),
       ),
