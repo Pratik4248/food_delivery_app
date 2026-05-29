@@ -15,11 +15,11 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> sendOtp(String email) async {
     try {
-      state = state.copyWith(isLoading: true);
+      state = state.copyWith(isLoading: true, clearError: true);
       await repository.sendOtp(email: email);
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, clearError: true);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: _cleanError(e));
     }
   }
 
@@ -32,7 +32,7 @@ class AuthController extends StateNotifier<AuthState> {
     required String otp,
   }) async {
     try {
-      state = state.copyWith(isLoading: true);
+      state = state.copyWith(isLoading: true, clearError: true);
 
       await repository.verifyOtp(
         name: name,
@@ -43,21 +43,23 @@ class AuthController extends StateNotifier<AuthState> {
         otp: otp,
       );
 
-      state = state.copyWith(isLoading: false);
-    } 
-    catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, clearError: true);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: _cleanError(e));
     }
   }
 
   Future<void> login({required String email, required String password}) async {
     try {
-      state = state.copyWith(isLoading: true);
+      state = state.copyWith(isLoading: true, clearError: true);
       await repository.login(email: email, password: password);
-      state = state.copyWith(isLoading: false);
-    } 
-    catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, clearError: true);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: _cleanError(e));
     }
+  }
+
+  String _cleanError(Object error) {
+    return error.toString().replaceFirst('Exception: ', '');
   }
 }
