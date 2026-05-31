@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery/core/widgets/auth_snackbar.dart';
 import '../controller/auth_controller.dart';
+import 'otp_screen.dart';
 
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -18,10 +18,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   late final TextEditingController passwordController;
   late final TextEditingController phoneController;
   late final TextEditingController addressController;
-  late final TextEditingController otpController;
-  late final FocusNode otpFocusNode;
   bool isSendingOtp = false;
-  bool isVerifyingOtp = false;
   bool isPasswordVisible = false;
 
   @override
@@ -32,8 +29,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     passwordController = TextEditingController();
     phoneController = TextEditingController();
     addressController = TextEditingController();
-    otpController = TextEditingController();
-    otpFocusNode = FocusNode();
   }
 
   @override
@@ -43,8 +38,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     passwordController.dispose();
     phoneController.dispose();
     addressController.dispose();
-    otpController.dispose();
-    otpFocusNode.dispose();
     super.dispose();
   }
 
@@ -160,37 +153,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     textInputAction: TextInputAction.next,
                   ),
 
-                  const SizedBox(height: 18),
-
-                  OutlinedButton.icon(
-                    style: _secondaryButtonStyle,
-                    onPressed: _isBusy ? null : _sendOtp,
-                    icon: isSendingOtp
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2.2),
-                          )
-                        : const Icon(Icons.sms_outlined),
-                    label: const Text('Send OTP'),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  TextField(
-                    controller: otpController,
-                    focusNode: otpFocusNode,
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.done,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onSubmitted: (_) => _verifyOtp(),
-                    decoration: _fieldDecoration(
-                      hintText: 'Enter OTP',
-                      icon: Icons.pin_outlined,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 22),
 
                   const _AuthError(),
 
@@ -198,8 +161,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
                   ElevatedButton(
                     style: _primaryButtonStyle,
-                    onPressed: _isBusy ? null : _verifyOtp,
-                    child: isVerifyingOtp
+                    onPressed: isSendingOtp ? null : _createAccount,
+                    child: isSendingOtp
                         ? const SizedBox(
                             height: 22,
                             width: 22,
@@ -208,9 +171,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               strokeWidth: 2.4,
                             ),
                           )
-                        : const Text('Verify and create account'),
+                        : const Text('Create account'),
                   ),
-                  
+
                   const SizedBox(height: 18),
 
                   Row(
@@ -235,39 +198,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     );
   }
 
-  Future<void> _sendOtp() async {
-    if (!_isValidGmail(emailController.text.trim())) {
+  Future<void> _createAccount() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (nameController.text.trim().isEmpty) {
       showAuthSnackBar(
         ScaffoldMessenger.of(context),
-        'Enter a valid Gmail address',
+        'Enter your full name',
       );
       return;
     }
-
-    setState(() => isSendingOtp = true);
-
-    await ref.read(authControllerProvider.notifier).sendOtp(
-          emailController.text.trim(),
-        );
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() => isSendingOtp = false);
-
-    final error = ref.read(authControllerProvider).error;
-    if (error == null || error.isEmpty) {
-      FocusScope.of(context).requestFocus(otpFocusNode);
-      return;
-    }
-
-    showAuthSnackBar(ScaffoldMessenger.of(context), error);
-  }
-
-  Future<void> _verifyOtp() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text;
 
     if (!_isValidGmail(email)) {
       showAuthSnackBar(
@@ -285,39 +226,65 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       return;
     }
 
-    setState(() => isVerifyingOtp = true);
+    if (phoneController.text.trim().isEmpty) {
+      showAuthSnackBar(
+        ScaffoldMessenger.of(context),
+        'Enter your phone number',
+      );
+      return;
+    }
 
-    await ref.read(authControllerProvider.notifier).verifyOtp(
-          name: nameController.text.trim(),
-          email: emailController.text.trim(),
-          password: passwordController.text.trim(),
-          phone: phoneController.text.trim(),
-          address: addressController.text.trim(),
-          otp: otpController.text.trim(),
-        );
+    if (addressController.text.trim().isEmpty) {
+      showAuthSnackBar(
+        ScaffoldMessenger.of(context),
+        'Enter your delivery address',
+      );
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    setState(() => isSendingOtp = true);
+
+    await ref.read(authControllerProvider.notifier).sendOtp(email);
 
     if (!mounted) {
       return;
     }
 
-    setState(() => isVerifyingOtp = false);
+    setState(() => isSendingOtp = false);
 
     final error = ref.read(authControllerProvider).error;
     if (error == null || error.isEmpty) {
-      final messenger = ScaffoldMessenger.of(context);
-      Navigator.of(context).pop();
-      showAuthSnackBar(
-        messenger,
-        'Account created successfully',
-        isSuccess: true,
+      final created = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => OtpScreen(
+            name: nameController.text.trim(),
+            email: email,
+            password: password,
+            phone: phoneController.text.trim(),
+            address: addressController.text.trim(),
+          ),
+        ),
       );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (created == true) {
+        showAuthSnackBar(
+          messenger,
+          'Account created successfully',
+          isSuccess: true,
+        );
+        Navigator.of(context).pop();
+      }
       return;
     }
 
     showAuthSnackBar(ScaffoldMessenger.of(context), error);
   }
-
-  bool get _isBusy => isSendingOtp || isVerifyingOtp;
 
   bool _isValidGmail(String email) {
     return RegExp(
@@ -371,7 +338,7 @@ class _SignupHeader extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Add your details, request an OTP, then enter it below.',
+            'Add your details and verify the OTP on the next screen.',
             style: TextStyle(
               color: Color(0xFFFFE7D5),
               fontSize: 15,
@@ -519,12 +486,4 @@ final ButtonStyle _primaryButtonStyle = ElevatedButton.styleFrom(
   disabledBackgroundColor: const Color(0xFFF1B182),
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
   textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-);
-
-final ButtonStyle _secondaryButtonStyle = OutlinedButton.styleFrom(
-  minimumSize: const Size.fromHeight(54),
-  foregroundColor: const Color(0xFFE85D04),
-  side: const BorderSide(color: Color(0xFFE85D04), width: 1.3),
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
 );
