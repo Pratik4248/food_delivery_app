@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery/core/widgets/auth_snackbar.dart';
 import '../controller/auth_controller.dart';
+import '../widgets/auth_button.dart';
+import '../widgets/auth_error.dart';
+import '../widgets/otp_field.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   const OtpScreen({
@@ -26,17 +29,20 @@ class OtpScreen extends ConsumerStatefulWidget {
 
 class _OtpScreenState extends ConsumerState<OtpScreen> {
   late final TextEditingController otpController;
+  late final FocusNode otpFocusNode;
   bool isVerifyingOtp = false;
 
   @override
   void initState() {
     super.initState();
     otpController = TextEditingController();
+    otpFocusNode = FocusNode();
   }
 
   @override
   void dispose() {
     otpController.dispose();
+    otpFocusNode.dispose();
     super.dispose();
   }
 
@@ -70,33 +76,18 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  TextField(
+                  OtpField(
                     controller: otpController,
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.done,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    focusNode: otpFocusNode,
                     onSubmitted: (_) => _verifyOtp(),
-                    decoration: _fieldDecoration(
-                      hintText: 'Enter OTP',
-                      icon: Icons.pin_outlined,
-                    ),
                   ),
                   const SizedBox(height: 16),
-                  const _AuthError(),
+                  const AuthError(),
                   const SizedBox(height: 22),
-                  ElevatedButton(
-                    style: _primaryButtonStyle,
+                  AuthButton(
+                    label: 'Verify and create account',
+                    isBusy: isVerifyingOtp,
                     onPressed: isVerifyingOtp ? null : _verifyOtp,
-                    child: isVerifyingOtp
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.4,
-                            ),
-                          )
-                        : const Text('Verify and create account'),
                   ),
                 ],
               ),
@@ -193,83 +184,3 @@ class _OtpHeader extends StatelessWidget {
     );
   }
 }
-
-class _AuthError extends ConsumerWidget {
-  const _AuthError();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final error = ref.watch(
-      authControllerProvider.select((state) => state.error),
-    );
-
-    if (error == null || error.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFEDE8),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFFC7B8)),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            color: Color(0xFFC84630),
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              error,
-              style: const TextStyle(
-                color: Color(0xFFC84630),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-InputDecoration _fieldDecoration({
-  required String hintText,
-  required IconData icon,
-  Widget? suffixIcon,
-}) {
-  return InputDecoration(
-    hintText: hintText,
-    prefixIcon: Icon(icon, color: const Color(0xFFE85D04)),
-    suffixIcon: suffixIcon,
-    filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFFEADBCF)),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFFEADBCF)),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFFE85D04), width: 1.5),
-    ),
-  );
-}
-
-final ButtonStyle _primaryButtonStyle = ElevatedButton.styleFrom(
-  minimumSize: const Size.fromHeight(56),
-  elevation: 0,
-  backgroundColor: const Color(0xFFE85D04),
-  foregroundColor: Colors.white,
-  disabledBackgroundColor: const Color(0xFFF1B182),
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-);

@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:food_delivery/core/widgets/auth_snackbar.dart';
 import '../controller/auth_controller.dart';
+import '../widgets/auth_button.dart';
+import '../widgets/auth_error.dart';
+import '../widgets/auth_field.dart';
+import '../widgets/password_field.dart';
+import '../widgets/signup_header.dart';
+import '../widgets/validation_tick.dart';
 import 'otp_screen.dart';
-
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -19,7 +24,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   late final TextEditingController phoneController;
   late final TextEditingController addressController;
   bool isSendingOtp = false;
-  bool isPasswordVisible = false;
 
   @override
   void initState() {
@@ -66,116 +70,73 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 14),
-
-                  const _SignupHeader(),
-
+                  const SignupHeader(),
                   const SizedBox(height: 24),
-
-                  _AuthField(
+                  AuthField(
                     controller: nameController,
                     hintText: 'Full name',
                     icon: Icons.person_outline_rounded,
                     textInputAction: TextInputAction.next,
                   ),
-
                   const SizedBox(height: 12),
-
                   ValueListenableBuilder<TextEditingValue>(
                     valueListenable: emailController,
                     builder: (context, value, child) {
-                      return _AuthField(
+                      return AuthField(
                         controller: emailController,
                         hintText: 'Email address',
                         icon: Icons.mail_outline_rounded,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
-                        suffixIcon: _ValidationTick(
+                        suffixIcon: ValidationTick(
                           isVisible: _isValidGmail(value.text.trim()),
                         ),
                       );
                     },
                   ),
-
                   const SizedBox(height: 12),
-
                   ValueListenableBuilder<TextEditingValue>(
                     valueListenable: passwordController,
                     builder: (context, value, child) {
-                      return _AuthField(
+                      return PasswordField(
                         controller: passwordController,
-                        hintText: 'Password',
-                        icon: Icons.lock_outline_rounded,
-                        obscureText: !isPasswordVisible,
                         textInputAction: TextInputAction.next,
                         suffixIcon: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _ValidationTick(
+                            ValidationTick(
                               isVisible: _isValidPassword(value.text),
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                setState(
-                                  () => isPasswordVisible = !isPasswordVisible,
-                                );
-                              },
-                              icon: Icon(
-                                isPasswordVisible
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                                color: const Color(0xFFE85D04),
-                              ),
                             ),
                           ],
                         ),
                       );
                     },
                   ),
-
                   const SizedBox(height: 12),
-
-                  _AuthField(
+                  AuthField(
                     controller: phoneController,
                     hintText: 'Phone number',
                     icon: Icons.call_outlined,
                     keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.next,
                   ),
-
                   const SizedBox(height: 12),
-
-                  _AuthField(
+                  AuthField(
                     controller: addressController,
                     hintText: 'Delivery address',
                     icon: Icons.location_on_outlined,
                     textInputAction: TextInputAction.next,
                   ),
-
                   const SizedBox(height: 22),
-
-                  const _AuthError(),
-
+                  const AuthError(),
                   const SizedBox(height: 22),
-
-                  ElevatedButton(
-                    style: _primaryButtonStyle,
+                  AuthButton(
+                    label: 'Create account',
+                    isBusy: isSendingOtp,
                     onPressed: isSendingOtp ? null : _createAccount,
-                    child: isSendingOtp
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.4,
-                            ),
-                          )
-                        : const Text('Create account'),
                   ),
-
                   const SizedBox(height: 18),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -203,10 +164,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final password = passwordController.text.trim();
 
     if (nameController.text.trim().isEmpty) {
-      showAuthSnackBar(
-        ScaffoldMessenger.of(context),
-        'Enter your full name',
-      );
+      showAuthSnackBar(ScaffoldMessenger.of(context), 'Enter your full name');
       return;
     }
 
@@ -299,191 +257,3 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     return password.length >= 6 && hasUppercase && hasSpecial;
   }
 }
-
-class _SignupHeader extends StatelessWidget {
-  const _SignupHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE85D04),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x2EE85D04),
-            blurRadius: 24,
-            offset: Offset(0, 12),
-          ),
-        ],
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.local_dining_rounded,
-            color: Colors.white,
-            size: 34,
-          ),
-          SizedBox(height: 18),
-          Text(
-            'Create account',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.w900,
-              height: 1.05,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Add your details and verify the OTP on the next screen.',
-            style: TextStyle(
-              color: Color(0xFFFFE7D5),
-              fontSize: 15,
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AuthField extends StatelessWidget {
-  const _AuthField({
-    required this.controller,
-    required this.hintText,
-    required this.icon,
-    this.keyboardType,
-    this.obscureText = false,
-    this.textInputAction,
-    this.suffixIcon,
-  });
-
-  final TextEditingController controller;
-  final String hintText;
-  final IconData icon;
-  final TextInputType? keyboardType;
-  final bool obscureText;
-  final TextInputAction? textInputAction;
-  final Widget? suffixIcon;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      textInputAction: textInputAction,
-      decoration: _fieldDecoration(
-        hintText: hintText,
-        icon: icon,
-        suffixIcon: suffixIcon,
-      ),
-    );
-  }
-}
-
-class _ValidationTick extends StatelessWidget {
-  const _ValidationTick({required this.isVisible});
-
-  final bool isVisible;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!isVisible) {
-      return const SizedBox.shrink();
-    }
-
-    return const Padding(
-      padding: EdgeInsets.only(right: 8),
-      child: Icon(
-        Icons.check_circle_rounded,
-        color: Color(0xFF1F7A63),
-        size: 22,
-      ),
-    );
-  }
-}
-
-class _AuthError extends ConsumerWidget {
-  const _AuthError();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final error = ref.watch(
-      authControllerProvider.select((state) => state.error),
-    );
-
-    if (error == null || error.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFEDE8),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFFC7B8)),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            color: Color(0xFFC84630),
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              error,
-              style: const TextStyle(
-                color: Color(0xFFC84630),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-InputDecoration _fieldDecoration({
-  required String hintText,
-  required IconData icon,
-  Widget? suffixIcon,
-}) {
-  return InputDecoration(
-    hintText: hintText,
-    prefixIcon: Icon(icon, color: const Color(0xFFE85D04)),
-    suffixIcon: suffixIcon,
-    filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFFEADBCF)),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFFEADBCF)),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFFE85D04), width: 1.5),
-    ),
-  );
-}
-
-final ButtonStyle _primaryButtonStyle = ElevatedButton.styleFrom(
-  minimumSize: const Size.fromHeight(56),
-  elevation: 0,
-  backgroundColor: const Color(0xFFE85D04),
-  foregroundColor: Colors.white,
-  disabledBackgroundColor: const Color(0xFFF1B182),
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-);
