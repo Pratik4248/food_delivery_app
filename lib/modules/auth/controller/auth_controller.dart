@@ -59,7 +59,19 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> checkUser({required String email}) async {
+   try {
+      state = state.copyWith(isLoading: true, clearError: true);
+      await repository.checkUser(email: email);
+      state = state.copyWith(isLoading: false, clearError: true);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: _cleanError(e));
+    }
+  }
+  }
+
+
   String _cleanError(Object error) {
     return error.toString().replaceFirst('Exception: ', '');
   }
-}
+

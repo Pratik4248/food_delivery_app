@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:food_delivery/core/widgets/auth_snackbar.dart';
-
 import '../controller/auth_controller.dart';
 import '../../home/view/home_screen.dart';
 import 'signup_screen.dart';
@@ -154,6 +152,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
+
+      
       return;
     }
 

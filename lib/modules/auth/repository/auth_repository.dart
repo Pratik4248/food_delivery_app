@@ -137,9 +137,36 @@ class AuthRepository {
       }
     }
   }
+  
+  Future<void> checkUser({
+    required String email,
+
+  }) async {
+
+    final response = await http.post(
+
+      Uri.parse('$baseUrl/login'),
+
+      headers: {'Content-Type': 'application/json'},
+
+      body: jsonEncode({
+
+        'email': email,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(_messageFromResponse(response.body));
+    }
+
+    }
+  }
+
+  
 
   String _messageFromResponse(String responseBody) {
     final body = jsonDecode(responseBody) as Map<String, dynamic>;
     return body['message']?.toString() ?? 'Something went wrong';
   }
-}
+
+

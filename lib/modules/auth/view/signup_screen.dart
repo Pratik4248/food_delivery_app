@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:food_delivery/core/widgets/auth_snackbar.dart';
-
 import '../controller/auth_controller.dart';
+
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -74,16 +73,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 14),
+
                   const _SignupHeader(),
+
                   const SizedBox(height: 24),
+
                   _AuthField(
                     controller: nameController,
                     hintText: 'Full name',
                     icon: Icons.person_outline_rounded,
                     textInputAction: TextInputAction.next,
                   ),
+
                   const SizedBox(height: 12),
+
                   ValueListenableBuilder<TextEditingValue>(
                     valueListenable: emailController,
                     builder: (context, value, child) {
@@ -99,7 +104,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       );
                     },
                   ),
+
                   const SizedBox(height: 12),
+
                   ValueListenableBuilder<TextEditingValue>(
                     valueListenable: passwordController,
                     builder: (context, value, child) {
@@ -133,7 +140,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       );
                     },
                   ),
+
                   const SizedBox(height: 12),
+
                   _AuthField(
                     controller: phoneController,
                     hintText: 'Phone number',
@@ -141,14 +150,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.next,
                   ),
+
                   const SizedBox(height: 12),
+
                   _AuthField(
                     controller: addressController,
                     hintText: 'Delivery address',
                     icon: Icons.location_on_outlined,
                     textInputAction: TextInputAction.next,
                   ),
+
                   const SizedBox(height: 18),
+
                   OutlinedButton.icon(
                     style: _secondaryButtonStyle,
                     onPressed: _isBusy ? null : _sendOtp,
@@ -161,7 +174,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         : const Icon(Icons.sms_outlined),
                     label: const Text('Send OTP'),
                   ),
+
                   const SizedBox(height: 14),
+
                   TextField(
                     controller: otpController,
                     focusNode: otpFocusNode,
@@ -174,9 +189,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       icon: Icons.pin_outlined,
                     ),
                   ),
+
                   const SizedBox(height: 16),
+
                   const _AuthError(),
+
                   const SizedBox(height: 22),
+
                   ElevatedButton(
                     style: _primaryButtonStyle,
                     onPressed: _isBusy ? null : _verifyOtp,
@@ -191,7 +210,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           )
                         : const Text('Verify and create account'),
                   ),
+                  
                   const SizedBox(height: 18),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
